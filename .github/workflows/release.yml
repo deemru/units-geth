@@ -1,0 +1,63 @@
+name: Release
+on: push
+
+env:
+  golang-version: '1.24.1'
+  units-geth-tag: 'dca6bd6422ce7960ca1c4f6cb1d7cfa1f72f303c'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+        - os: windows-latest
+          platform: win64
+          aext: zip
+        - os: ubuntu-latest
+          platform: linux
+          aext: tgz
+        - os: macos-latest
+          platform: darwin
+          aext: tgz
+
+    name: Setup
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.golang-version }}
+
+    - name: Build
+      env:
+        PROJECTNAME: 'units-geth'
+        PROJECTTAG: ${{ env.units-geth-tag }}
+        PLATFORM: ${{ matrix.platform }}
+        AEXT: ${{ matrix.aext }}
+      shell: bash
+      run: |
+        mkdir units-geth
+        cd units-geth
+        git init -q .
+        git remote add origin https://github.com/UnitsNetwork/op-geth.git
+        git fetch origin ${PROJECTTAG}
+        git checkout -b temp ${PROJECTTAG}
+        go run build/ci.go install ./cmd/geth
+        cd build/bin
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          7z a -mm=Deflate -mfb=258 -mpass=15 -r units-geth_${PLATFORM}.${AEXT} ./geth.exe
+        elif [ "$RUNNER_OS" == "Linux" ]; then
+          GZIP=-9 tar -zcvf units-geth_${PLATFORM}.${AEXT} ./geth
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          GZIP=-9 tar -zcvf units-geth_${PLATFORM}.${AEXT} ./geth
+        else
+          exit 1
+        fi
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          units-geth/build/bin/units-geth_${{ matrix.platform }}.${{ matrix.aext }}
