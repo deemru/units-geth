@@ -2,7 +2,7 @@ name: Release
 on: push
 
 env:
-  golang-version: '1.24.1'
+  golang-version: '1.24.0'
   units-geth-tag: 'dca6bd6422ce7960ca1c4f6cb1d7cfa1f72f303c'
 
 jobs:
@@ -13,12 +13,6 @@ jobs:
       fail-fast: true
       matrix:
         include:
-        - os: windows-latest
-          platform: win64
-          aext: zip
-        - os: ubuntu-latest
-          platform: linux
-          aext: tgz
         - os: macos-latest
           platform: darwin
           aext: tgz
@@ -29,45 +23,46 @@ jobs:
 
     - name: Setup
       env:
-        PROJECTNAME: 'units-geth'
-        PROJECTTAG: ${{ env.units-geth-tag }}
-        PLATFORM: ${{ matrix.platform }}
-        AEXT: ${{ matrix.aext }}
+        TARGET: ${{ env.units-geth-tag }}
       shell: bash
       run: |
         mkdir units-geth
         cd units-geth
         git init -q .
         git remote add origin https://github.com/UnitsNetwork/op-geth.git
-        git fetch origin ${PROJECTTAG}
-        git checkout -b temp ${PROJECTTAG}
-        if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-          git tag -f "units-geth-${GITHUB_REF_NAME}"
-        fi
+        git fetch origin ${TARGET}
+        git checkout -b temp ${TARGET}
 
     - name: Go Setup
       uses: actions/setup-go@v5
       with:
         go-version: ${{ env.golang-version }}
-        cache-dependency-path: units-geth/go.sum
+        cache: false
 
     - name: Go Build
+      shell: bash
+      run: |
+        cd units-geth
+        git tag -f "${GITHUB_REF_NAME}-units-geth"
+        go run build/ci.go install ./cmd/geth
+        cd build/bin
+        ./geth version
+        git tag -l
+
+    - name: Compress
+      if: startsWith(github.ref, 'refs/tags/')
       env:
-        PROJECTNAME: 'units-geth'
-        PROJECTTAG: ${{ env.units-geth-tag }}
         PLATFORM: ${{ matrix.platform }}
         AEXT: ${{ matrix.aext }}
       shell: bash
       run: |
-        cd units-geth
-        go run build/ci.go install ./cmd/geth
-        cd build/bin
+        cd units-geth/build/bin
         if [ "$RUNNER_OS" == "Windows" ]; then
-          7z a -mm=Deflate -mfb=258 -mpass=15 -r units-geth_${PLATFORM}.${AEXT} ./geth.exe
+          7z a -mm=Deflate -mfb=258 -mpass=15 -r units-geth-${GITHUB_REF_NAME}_${PLATFORM}.${AEXT} ./geth.exe
         elif [ "$RUNNER_OS" == "Linux" ]; then
-          tar -cvf units-geth_${PLATFORM}.${AEXT} --use-compress-program='gzip -9' ./geth
+          tar -cvf units-geth-${GITHUB_REF_NAME}_${PLATFORM}.${AEXT} --use-compress-program='gzip -9' ./geth
         elif [ "$RUNNER_OS" == "macOS" ]; then
-          tar -cvf units-geth_${PLATFORM}.${AEXT} --use-compress-program='gzip -9' ./geth
+          tar -cvf units-geth-${GITHUB_REF_NAME}_${PLATFORM}.${AEXT} --use-compress-program='gzip -9' ./geth
         else
           exit 1
         fi
@@ -77,4 +72,4 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          units-geth/build/bin/units-geth_${{ matrix.platform }}.${{ matrix.aext }}
+          units-geth/build/bin/units-geth-${{ github.ref_name }}_${{ matrix.platform }}.${{ matrix.aext }}
