@@ -2,7 +2,7 @@ name: Release
 on: push
 
 env:
-  golang-version: '1.24.0'
+  golang-version: '1.24.1'
   units-geth-tag: 'dca6bd6422ce7960ca1c4f6cb1d7cfa1f72f303c'
 
 jobs:
@@ -13,6 +13,12 @@ jobs:
       fail-fast: true
       matrix:
         include:
+        - os: windows-latest
+          platform: win64
+          aext: zip
+        - os: ubuntu-latest
+          platform: linux
+          aext: tgz
         - os: macos-latest
           platform: darwin
           aext: tgz
@@ -32,22 +38,20 @@ jobs:
         git remote add origin https://github.com/UnitsNetwork/op-geth.git
         git fetch origin ${TARGET}
         git checkout -b temp ${TARGET}
+        git tag -f "${GITHUB_REF_NAME}-units"
 
     - name: Go Setup
       uses: actions/setup-go@v5
       with:
         go-version: ${{ env.golang-version }}
-        cache: false
+        cache-dependency-path: units-geth/go.sum
 
     - name: Go Build
       shell: bash
       run: |
         cd units-geth
-        git tag -f "${GITHUB_REF_NAME}-units-geth"
         go run build/ci.go install ./cmd/geth
-        cd build/bin
-        ./geth version
-        git tag -l
+        build/bin/geth version
 
     - name: Compress
       if: startsWith(github.ref, 'refs/tags/')
