@@ -16,7 +16,7 @@ jobs:
         - os: windows-latest
           platform: win64
           aext: zip
-        - os: ubuntu-latest
+        - os: ubuntu-22.04
           platform: linux
           aext: tgz
         - os: macos-latest
