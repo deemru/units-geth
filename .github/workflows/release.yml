@@ -3,7 +3,7 @@ on: push
 
 env:
   golang-version: '1.24.1'
-  units-geth-tag: 'dca6bd6422ce7960ca1c4f6cb1d7cfa1f72f303c'
+  units-geth-tag: '853c4e425e435fd09b05502cc863ae170ef2aff5'
 
 jobs:
   build:
@@ -35,7 +35,7 @@ jobs:
         mkdir units-geth
         cd units-geth
         git init -q .
-        git remote add origin https://github.com/UnitsNetwork/op-geth.git
+        git remote add origin https://github.com/deemru/op-geth.git
         git fetch origin ${TARGET}
         git checkout -b temp ${TARGET}
         git tag -f "${GITHUB_REF_NAME}-units"
