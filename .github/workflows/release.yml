@@ -3,7 +3,7 @@ on: push
 
 env:
   golang-version: '1.24.1'
-  units-geth-tag: '4a71d20509e51b1cf3e7c2b1e445cae7c3e2d449'
+  units-geth-tag: '9577afbdabf27f764805d2d3ae5f7a653270784b'
 
 jobs:
   build:
