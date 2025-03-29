@@ -1,0 +1,52 @@
+From e046d2be85cb7f6e75f40b2d14fe24ae102c6c19 Mon Sep 17 00:00:00 2001
+From: Dmitrii Pichulin <deem@deem.ru>
+Date: Fri, 28 Mar 2025 13:40:40 +0300
+Subject: [PATCH] 2048 blocks traces
+
+---
+ core/state/statedb.go     | 2 +-
+ eth/tracers/api.go        | 2 +-
+ triedb/pathdb/database.go | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/core/state/statedb.go b/core/state/statedb.go
+index 454b0e8a9..91791b527 100644
+--- a/core/state/statedb.go
++++ b/core/state/statedb.go
+@@ -42,7 +42,7 @@ import (
+ )
+ 
+ // TriesInMemory represents the number of layers that are kept in RAM.
+-const TriesInMemory = 128
++const TriesInMemory = 2048
+ 
+ type mutationType int
+ 
+diff --git a/eth/tracers/api.go b/eth/tracers/api.go
+index 574ccb60d..34d5377da 100644
+--- a/eth/tracers/api.go
++++ b/eth/tracers/api.go
+@@ -54,7 +54,7 @@ const (
+ 	// defaultTraceReexec is the number of blocks the tracer is willing to go back
+ 	// and reexecute to produce missing historical state necessary to run a specific
+ 	// trace.
+-	defaultTraceReexec = uint64(128)
++	defaultTraceReexec = uint64(2048)
+ 
+ 	// defaultTracechainMemLimit is the size of the triedb, at which traceChain
+ 	// switches over and tries to use a disk-backed database instead of building
+diff --git a/triedb/pathdb/database.go b/triedb/pathdb/database.go
+index d48850c10..7b5285fb6 100644
+--- a/triedb/pathdb/database.go
++++ b/triedb/pathdb/database.go
+@@ -54,7 +54,7 @@ const (
+ 
+ var (
+ 	// maxDiffLayers is the maximum diff layers allowed in the layer tree.
+-	maxDiffLayers = 128
++	maxDiffLayers = 2048
+ )
+ 
+ // layer is the interface implemented by all state layers which includes some
+-- 
+
