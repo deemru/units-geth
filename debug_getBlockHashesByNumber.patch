@@ -1,0 +1,47 @@
+From 750254d9dc47f1d1a89a08e87415c5e0ca2f30a3 Mon Sep 17 00:00:00 2001
+From: Dmitrii Pichulin <deem@deem.ru>
+Date: Sun, 19 Apr 2026 02:44:03 +0300
+Subject: [PATCH] [PATCH] debug_getBlockHashesByNumber
+
+---
+ eth/api_debug.go            | 7 +++++++
+ internal/web3ext/web3ext.go | 6 ++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/eth/api_debug.go b/eth/api_debug.go
+index 3ca4c775d..5e55585b3 100644
+--- a/eth/api_debug.go
++++ b/eth/api_debug.go
+@@ -134,6 +134,13 @@ func (api *DebugAPI) GetBadBlocks(ctx context.Context) ([]*BadBlockArgs, error)
+ 	return results, nil
+ }
+ 
++// GetBlockHashesByNumber returns all block header hashes present in the local chain
++// database for the given block height. This includes the canonical header and any
++// fork headers that have not been pruned.
++func (api *DebugAPI) GetBlockHashesByNumber(ctx context.Context, number hexutil.Uint64) ([]common.Hash, error) {
++	return rawdb.ReadAllHashes(api.eth.ChainDb(), uint64(number)), nil
++}
++
+ // AccountRangeMaxResults is the maximum number of results to be returned per call
+ const AccountRangeMaxResults = 256
+ 
+diff --git a/internal/web3ext/web3ext.go b/internal/web3ext/web3ext.go
+index 6dd9efd68..ab6ace392 100644
+--- a/internal/web3ext/web3ext.go
++++ b/internal/web3ext/web3ext.go
+@@ -410,6 +410,12 @@ web3._extend({
+ 			call: 'debug_getBadBlocks',
+ 			params: 0,
+ 		}),
++		new web3._extend.Method({
++			name: 'getBlockHashesByNumber',
++			call: 'debug_getBlockHashesByNumber',
++			params: 1,
++			inputFormatter: [web3._extend.formatters.inputBlockNumberFormatter],
++		}),
+ 		new web3._extend.Method({
+ 			name: 'storageRangeAt',
+ 			call: 'debug_storageRangeAt',
+-- 
+
